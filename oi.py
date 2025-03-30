@@ -1,3 +1,4 @@
+import json
 from tools.tools import function_tool, ToolRegistry
 from typing import List, Dict
 from litellm import acompletion, completion
@@ -18,6 +19,12 @@ class Conversation(BaseModel):
             "content": msg.message if i < self.max_recent or msg.role.lower() == "system" else msg.summary}
             for i, msg in enumerate(self.messages[::-1])
         ][::-1]
+
+    def save(self, filename: str):
+        with open(filename, "w") as f: json.dump([msg.model_dump() for msg in self.messages], f)
+
+    def load(self, filename: str):
+        with open(filename, "r") as f: self.messages = [Message(**msg) for msg in json.load(f)]
     
 @function_tool
 def bash(command: str) -> Message:
