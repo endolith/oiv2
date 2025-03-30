@@ -24,7 +24,7 @@ def bash(command: str) -> Message:
     import subprocess
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return Message(
-        role="assistant", 
+        role="tool", 
         message=result.stdout or result.stderr or "Command executed successfully with no output", 
         summary=""
     )
@@ -45,8 +45,7 @@ class Interpreter():
         )
         if response.choices[0].message.tool_calls:
             for tool_call in response.choices[0].message.tool_calls:
-                result = ToolRegistry.dispatch(tool_call)
-                self.messages.messages.append(result)
+                self.messages.messages.append(ToolRegistry.dispatch(tool_call))
         if response.choices[0].message.content:
             self.messages.messages.append(
                 Message(
