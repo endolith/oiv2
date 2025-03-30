@@ -16,15 +16,15 @@ class Conversation(BaseModel):
         return [{
             "role": msg.role, 
             "content": msg.message if i < self.max_recent or msg.role.lower() == "system" else msg.summary}
-            for i, msg in enumerate(self.messages)
-        ]
+            for i, msg in enumerate(self.messages[::-1])
+        ][::-1]
     
 @function_tool
 def bash(command: str) -> Message:
     import subprocess
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return Message(
-        role="user", 
+        role="assistant", 
         message=result.stdout or result.stderr or "Command executed successfully with no output", 
         summary=""
     )
