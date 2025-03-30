@@ -1,4 +1,6 @@
 import json
+import colorama
+
 from cli_utils import Text
 from tools.tools import function_tool, ToolRegistry
 from typing import List, Dict, Optional
@@ -81,7 +83,7 @@ def main():
     interpreter.messages.messages = [
         Message(role="system", message="You are a helpful assistant. Use tools to help the user.", summary="")
     ]
-    user_input = input("Enter a message: ")
+    user_input = input(Text(text="Enter a message: ", color="blue"))
     interpreter.messages.messages.append(
         Message(role="user", message=user_input, summary="")
     )
@@ -91,4 +93,5 @@ def main():
         #print(interpreter.messages.messages[-1].message)
 
 if __name__ == "__main__":
+    colorama.init()
     main()
