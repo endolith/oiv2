@@ -43,7 +43,7 @@ def bash(command: str) -> Message:
 def user_input(prompt: Optional[str]) -> Message:
     if prompt:
         print(prompt)
-    text = input(Text(text="input: ", color="blue"))
+    text = input(Text(text="You: ", color="blue"))
     return Message(
         role="user",
         message=text,
