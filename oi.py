@@ -46,13 +46,7 @@ class Interpreter():
         if response.choices[0].message.tool_calls:
             for tool_call in response.choices[0].message.tool_calls:
                 result = ToolRegistry.dispatch(tool_call)
-                self.messages.messages.append(
-                    Message(
-                        role="tool",
-                        message=str(result),
-                        summary=""
-                    )
-                )
+                self.messages.messages.append(result)
         if response.choices[0].message.content:
             self.messages.messages.append(
                 Message(
