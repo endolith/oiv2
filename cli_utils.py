@@ -1,41 +1,31 @@
-import sys, asyncio, threading
+import sys, time, threading
 
 class Spinner:
     def __enter__(self): self.start(); return self
     def __exit__(self, *_): self.stop()
-    
     def __init__(self, msg="", frames=['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'], delay=0.1, color=None):
         self.msg, self.frames, self.delay = msg, frames, delay
-        self.running = False
+        self.running, self._done = False, threading.Event()
         self._colors = {'black':30, 'red':31, 'green':32, 'yellow':33, 'blue':34, 'magenta':35, 'cyan':36, 'white':37,
-                       'bright_black':90, 'bright_red':91, 'bright_green':92, 'bright_yellow':93, 
-                       'bright_blue':94, 'bright_magenta':95, 'bright_cyan':96, 'bright_white':97}
+                        'bright_black':90, 'bright_red':91, 'bright_green':92, 'bright_yellow':93, 
+                        'bright_blue':94, 'bright_magenta':95, 'bright_cyan':96, 'bright_white':97}
         self._color = f"\033[{self._colors.get(color, 0)}m" if color else ""
         self._reset = "\033[0m" if color else ""
-
-    async def _spin(self):
-        i = 0
-        while self.running:
-            sys.stdout.write(f"\r{self._color}{self.frames[i%len(self.frames)]}{self._reset} {self.msg}")
-            sys.stdout.flush()
-            try:
-                await asyncio.sleep(self.delay)
-                i += 1
-            except asyncio.CancelledError:
-                break
-
     def start(self):
         if self.running: return
-        self.running = True
-        sys.stdout.write('\033[?25l')  # Hide cursor
-        loop = asyncio.new_event_loop()
-        threading.Thread(target=lambda: loop.run_until_complete(self._spin()), daemon=True).start()
-
-    def stop(self):
+        self.running, i = True, 0
+        self._done.clear(); sys.stdout.write('\033[?25l')
+        def spin():
+            nonlocal i
+            while self.running:
+                sys.stdout.write(f"\r{self._color}{self.frames[i%len(self.frames)]}{self._reset} {self.msg}")
+                sys.stdout.flush(); time.sleep(self.delay); i += 1
+            sys.stdout.write(f"\r{' '*(len(self.msg)+2)}\r\033[?25h"); sys.stdout.flush()
+            self._done.set()
+        threading.Thread(target=spin, daemon=True).start()
+    def stop(self): 
         if not self.running: return
-        self.running = False
-        sys.stdout.write(f"\r{' '*(len(self.msg)+2)}\r\033[?25h")  # Show cursor and clear line
-        sys.stdout.flush()
+        self.running = False; self._done.wait(timeout=0.5)
 
 class Text:
     _colors = {'black':30, 'red':31, 'green':32, 'yellow':33, 'blue':34, 'magenta':35, 'cyan':36, 'white':37,
@@ -60,8 +50,3 @@ class Text:
     def __add__(self, other): return str(self) + str(other)
     def __radd__(self, other): return str(other) + str(self)
     def __len__(self): return len(self.text)
-
-if __name__ == "__main__":
-    import time
-    with Spinner(Text("Loading...", color="green"), color="green"):
-        time.sleep(1)

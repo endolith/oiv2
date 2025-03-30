@@ -1,6 +1,7 @@
 import json
+from cli_utils import Text
 from tools.tools import function_tool, ToolRegistry
-from typing import List, Dict
+from typing import List, Dict, Optional
 from litellm import acompletion, completion
 from pydantic import BaseModel
 
@@ -35,7 +36,18 @@ def bash(command: str) -> Message:
         message=result.stdout or result.stderr or "Command executed successfully with no output", 
         summary=""
     )
-    
+
+@function_tool
+def user_input(prompt: Optional[str]) -> Message:
+    if prompt:
+        print(prompt)
+    text = input(Text(text="input: ", color="blue"))
+    return Message(
+        role="user",
+        message=text,
+        summary=""
+    )
+
 class Interpreter():
     def __init__(self, model: str = "openai/local"):
         self.model = model
@@ -53,6 +65,7 @@ class Interpreter():
         if response.choices[0].message.tool_calls:
             for tool_call in response.choices[0].message.tool_calls:
                 self.messages.messages.append(ToolRegistry.dispatch(tool_call))
+                print(self.messages.messages[-1].message)
         if response.choices[0].message.content:
             self.messages.messages.append(
                 Message(
@@ -60,21 +73,22 @@ class Interpreter():
                     message=response.choices[0].message.content, 
                     summary=""
                 ))
+            print(self.messages.messages[-1].message)
+            self.messages.messages.append(user_input(""))
         
 def main():
     interpreter = Interpreter()
     interpreter.messages.messages = [
-        Message(role="system", message="You are a helpful assistant.", summary="")
+        Message(role="system", message="You are a helpful assistant. Use tools to help the user.", summary="")
     ]
+    user_input = input("Enter a message: ")
+    interpreter.messages.messages.append(
+        Message(role="user", message=user_input, summary="")
+    )
+        
     while True:
-        user_input = input("Enter a message: ")
-        if user_input == "exit":
-            break
-        interpreter.messages.messages.append(
-            Message(role="user", message=user_input, summary="")
-        )
         interpreter.respond()
-        print(interpreter.messages.messages[-1].message)
+        #print(interpreter.messages.messages[-1].message)
 
 if __name__ == "__main__":
     main()
