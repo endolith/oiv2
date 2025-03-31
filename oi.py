@@ -2,22 +2,21 @@ import os
 import json
 import asyncio
 import colorama
-
+import platform
 from typing import List, Dict, Optional
 from litellm import acompletion
 from cli_utils import Text
 from tools.tools import function_tool, ToolRegistry
-from tools.terminal import unix_bash, windows_cmd, get_operating_system, user_input
+from tools.terminal import user_input
 from conversation import Message, Conversation
 
 class Interpreter:
     def __init__(self, model: str = "openai/local"):
         self.model = model
         self.conversation = Conversation(messages=[Message(role="system",message=(
-                        "You are a helpful tool calling assistant. Use tools to help the user. "
-                        "If you need more information, run get_operating_system and wait for its output. "
-                        "Do not run getter tools more than once per session."
-                    ),summary="",)], max_recent=10)
+            f"""You are a helpful tool calling assistant. Use tools to help the user. 
+            Users Operating System is: {platform.platform(terse=True)}"""
+            ),summary="",)], max_recent=10)
 
     async def respond(self):
         response = await acompletion(
