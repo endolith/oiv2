@@ -30,12 +30,35 @@ class Conversation(BaseModel):
         with open(filename, "r") as f: self.messages = [Message(**msg) for msg in json.load(f)]
     
 @function_tool
-def bash(command: str) -> Message:
+def unix_bash(command: str) -> Message:
+    __doc__ = "Runs Bash commands, given that the user's operating system is Unix-like. Run `get_operating_system` and confirm that the user's OS is Unix-like first"
     import subprocess
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return Message(
         role="tool", 
         message=result.stdout or result.stderr or "Command executed successfully with no output", 
+        summary=""
+    )
+
+@function_tool
+def windows_cmd(command: str) -> Message:
+    __doc__ = "Runs Windows Command Prompt commands, given that the user's operating system is Windows. Run `get_operating_system` and confirm that the user's OS is Windows first."
+    import subprocess
+    print(command)
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    return Message(
+        role="tool", 
+        message=result.stdout or result.stderr or "Command executed successfully with no output", 
+        summary=""
+    )
+
+@function_tool
+def get_operating_system() -> Message:
+    __doc__ = "Returns the operating system. Useful when deciding to use unix_bash or windows_cmd."
+    import platform
+    return Message(
+        role="tool",
+        message=f"The OS is {platform.platform(terse=True)}", 
         summary=""
     )
 
@@ -55,7 +78,6 @@ class Interpreter():
         self.model = model
         self.messages = Conversation(messages=[], max_recent=3)
 
-    def respond(self, max_tokens: int = 1000):
         response = completion(
             model=self.model,
             base_url="http://localhost:1234/v1",
@@ -67,7 +89,7 @@ class Interpreter():
         if response.choices[0].message.tool_calls:
             for tool_call in response.choices[0].message.tool_calls:
                 self.messages.messages.append(ToolRegistry.dispatch(tool_call))
-                print(self.messages.messages[-1].message)
+                print(self.messages.messages[-1] if isinstance(self.messages.messages[-1], str) else self.messages.messages[-1].message)
         if response.choices[0].message.content:
             self.messages.messages.append(
                 Message(
@@ -81,7 +103,7 @@ class Interpreter():
 def main():
     interpreter = Interpreter()
     interpreter.messages.messages = [
-        Message(role="system", message="You are a helpful assistant. Use tools to help the user.", summary="")
+        Message(role="system", message="You are a helpful tool calling assistant. Use tools to help the user. Should you need more information, you may run a getter tool (i.e. get_operating_system`) and wait for its output. Do not run getter tools more than once per session.", summary="")
     ]
     user_input = input(Text(text="Enter a message: ", color="blue"))
     interpreter.messages.messages.append(
@@ -90,7 +112,6 @@ def main():
         
     while True:
         interpreter.respond()
-        #print(interpreter.messages.messages[-1].message)
 
 if __name__ == "__main__":
     colorama.init()
