@@ -1,4 +1,6 @@
+import os
 import json
+import asyncio
 import colorama
 
 from cli_utils import Text
@@ -10,7 +12,27 @@ from pydantic import BaseModel
 class Message(BaseModel):
     role: str
     message: str
-    summary: str
+    summary: str = ""
+
+    async def generate_summary(self) -> str:
+        #print("Generating summary...")
+        result = await acompletion(
+            model="openai/local",
+            base_url="http://localhost:1234/v1",
+            api_key="dummy",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that summarizes messages. Summary must be a single sentence."},
+                {"role": "user", "content": self.message},
+            ],
+            max_tokens=100,
+        )
+        return result.choices[0].message.content
+
+    def model_post_init(self, __context) -> None:
+        asyncio.create_task(self._update_summary())
+
+    async def _update_summary(self):
+        self.summary = await self.generate_summary()
 
 class Conversation(BaseModel):
     messages: List[Message]
@@ -20,46 +42,46 @@ class Conversation(BaseModel):
         return [{
             "role": msg.role, 
             "content": msg.message if i < self.max_recent or msg.role.lower() == "system" else msg.summary}
-            for i, msg in enumerate(self.messages[::-1])
-        ][::-1]
+            for i, msg in enumerate(self.messages[::-1])][::-1]
 
     def save(self, filename: str):
         with open(filename, "w") as f: json.dump([msg.model_dump() for msg in self.messages], f)
 
     def load(self, filename: str):
         with open(filename, "r") as f: self.messages = [Message(**msg) for msg in json.load(f)]
-    
+
 @function_tool
 def unix_bash(command: str) -> Message:
-    __doc__ = "Runs Bash commands, given that the user's operating system is Unix-like. Run `get_operating_system` and confirm that the user's OS is Unix-like first"
+    """Runs Bash commands on Unix-like systems."""
     import subprocess
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = result.stdout or result.stderr or "Command executed successfully with no output"
     return Message(
-        role="tool", 
-        message=result.stdout or result.stderr or "Command executed successfully with no output", 
-        summary=""
+        role="tool",
+        message=f"{os.getcwd()}$ {command}\n{output}",
+        summary="",
     )
 
 @function_tool
 def windows_cmd(command: str) -> Message:
-    __doc__ = "Runs Windows Command Prompt commands, given that the user's operating system is Windows. Run `get_operating_system` and confirm that the user's OS is Windows first."
+    """Runs Windows CMD commands."""
     import subprocess
-    print(command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = result.stdout or result.stderr or "Command executed successfully with no output"
     return Message(
-        role="tool", 
-        message=result.stdout or result.stderr or "Command executed successfully with no output", 
-        summary=""
+        role="tool",
+        message=output,
+        summary="",
     )
 
 @function_tool
 def get_operating_system() -> Message:
-    __doc__ = "Returns the operating system. Useful when deciding to use unix_bash or windows_cmd."
+    """Returns the current operating system."""
     import platform
     return Message(
         role="tool",
-        message=f"The OS is {platform.platform(terse=True)}", 
-        summary=""
+        message=f"The OS is {platform.platform(terse=True)}",
+        summary="",
     )
 
 @function_tool
@@ -67,52 +89,63 @@ def user_input(prompt: Optional[str]) -> Message:
     if prompt:
         print(prompt)
     text = input(Text(text="You: ", color="blue"))
-    return Message(
-        role="user",
-        message=text,
-        summary=""
-    )
+    return Message(role="user", message=text, summary="")
 
-class Interpreter():
+class Interpreter:
     def __init__(self, model: str = "openai/local"):
         self.model = model
-        self.messages = Conversation(messages=[], max_recent=3)
+        # Create a conversation with an initial system message.
+        self.conversation = Conversation(messages=[Message(role="system",message=(
+                        "You are a helpful tool calling assistant. Use tools to help the user. "
+                        "If you need more information, run get_operating_system and wait for its output. "
+                        "Do not run getter tools more than once per session."
+                    ),summary="",)], max_recent=10)
 
-        response = completion(
+    async def respond(self):
+        # Await the completion call
+        response = await acompletion(
             model=self.model,
             base_url="http://localhost:1234/v1",
             api_key="dummy",
-            messages=self.messages.get_messages(),
-            max_tokens=max_tokens,
+            messages=self.conversation.get_messages(),
+            max_tokens=1000,
             tools=ToolRegistry.get_all_tools(),
         )
-        if response.choices[0].message.tool_calls:
-            for tool_call in response.choices[0].message.tool_calls:
-                self.messages.messages.append(ToolRegistry.dispatch(tool_call))
-                print(self.messages.messages[-1] if isinstance(self.messages.messages[-1], str) else self.messages.messages[-1].message)
-        if response.choices[0].message.content:
-            self.messages.messages.append(
-                Message(
-                    role="assistant", 
-                    message=response.choices[0].message.content, 
-                    summary=""
-                ))
-            print(self.messages.messages[-1].message)
-            self.messages.messages.append(user_input(""))
-        
-def main():
+        msg_resp = response.choices[0].message
+
+        # Process any tool calls from the response
+        if msg_resp.tool_calls:
+            for tool_call in msg_resp.tool_calls:
+                tool_result = ToolRegistry.dispatch(tool_call)
+                if not isinstance(tool_result, Message):
+                    tool_result = Message(role="tool", message="Tool call failed", summary="")
+                self.conversation.messages.append(tool_result)
+                print(Text(text="Tool: ", color="red"), tool_result.message)
+        # Process assistant message content
+        if msg_resp.content:
+            assistant_msg = Message(
+                role="assistant",
+                message=msg_resp.content.rstrip("\n"),
+                summary="",
+            )
+            self.conversation.messages.append(assistant_msg)
+            print(Text(text="Assistant: ", color="green"), assistant_msg.message)
+            self.conversation.messages.append(user_input(""))
+
+    async def run(self):
+        # Get initial user input in async context
+        initial_text = input(Text(text="Enter a message: ", color="blue"))
+        self.conversation.messages.append(
+            Message(role="user", message=initial_text, summary="")
+        )
+        # Main loop – await asynchronous responses
+        while True:
+            await self.respond()
+
+async def main():
+    colorama.init()
     interpreter = Interpreter()
-    interpreter.messages.messages = [
-        Message(role="system", message="You are a helpful tool calling assistant. Use tools to help the user. Should you need more information, you may run a getter tool (i.e. get_operating_system`) and wait for its output. Do not run getter tools more than once per session.", summary="")
-    ]
-    user_input = input(Text(text="Enter a message: ", color="blue"))
-    interpreter.messages.messages.append(
-        Message(role="user", message=user_input, summary="")
-    )
-        
-    while True:
-        interpreter.respond()
+    await interpreter.run()
 
 if __name__ == "__main__":
-    colorama.init()
-    main()
+    asyncio.run(main())
