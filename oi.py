@@ -7,8 +7,8 @@ from typing import List, Dict, Optional
 from litellm import acompletion
 from cli_utils import Text
 from tools.tools import function_tool, ToolRegistry
-from tools.terminal import user_input
 from conversation import Message, Conversation
+from tools.terminal import user_input
 
 class Interpreter:
     def __init__(self, model: str = "openai/local"):
@@ -35,7 +35,7 @@ class Interpreter:
                 tool_result.tool_call_id = tool_call.id
                 tool_result.name = tool_call.function.name
                 if not isinstance(tool_result, Message):
-                    tool_result = Message(role="tool", message="Tool call failed", summary="")
+                    tool_result = Message(role="tool", message="Tool call failed", summary="", tool_call_id=tool_call.id, name=tool_call.function.name)
                 self.conversation.messages.append(tool_result)
                 print(Text(text="Tool: ", color="red"), tool_result.message)
         if msg_resp.content:
