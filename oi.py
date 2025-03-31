@@ -15,24 +15,20 @@ class Message(BaseModel):
     summary: str = ""
 
     async def generate_summary(self) -> str:
-        #print("Generating summary...")
         result = await acompletion(
             model="openai/local",
             base_url="http://localhost:1234/v1",
             api_key="dummy",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that summarizes messages. Summary must be a single sentence."},
+                {"role": "system", "content": "You are a helpful assistant that summarizes messages. Summary must be a single sentence and not longer than 10 words or the original.."},
                 {"role": "user", "content": self.message},
             ],
             max_tokens=100,
         )
         return result.choices[0].message.content
 
-    def model_post_init(self, __context) -> None:
-        asyncio.create_task(self._update_summary())
-
-    async def _update_summary(self):
-        self.summary = await self.generate_summary()
+    def model_post_init(self, __context) -> None: asyncio.create_task(self._update_summary())
+    async def _update_summary(self): self.summary = await self.generate_summary()
 
 class Conversation(BaseModel):
     messages: List[Message]
@@ -94,7 +90,6 @@ def user_input(prompt: Optional[str]) -> Message:
 class Interpreter:
     def __init__(self, model: str = "openai/local"):
         self.model = model
-        # Create a conversation with an initial system message.
         self.conversation = Conversation(messages=[Message(role="system",message=(
                         "You are a helpful tool calling assistant. Use tools to help the user. "
                         "If you need more information, run get_operating_system and wait for its output. "
@@ -102,7 +97,6 @@ class Interpreter:
                     ),summary="",)], max_recent=10)
 
     async def respond(self):
-        # Await the completion call
         response = await acompletion(
             model=self.model,
             base_url="http://localhost:1234/v1",
@@ -113,7 +107,6 @@ class Interpreter:
         )
         msg_resp = response.choices[0].message
 
-        # Process any tool calls from the response
         if msg_resp.tool_calls:
             for tool_call in msg_resp.tool_calls:
                 tool_result = ToolRegistry.dispatch(tool_call)
@@ -121,7 +114,6 @@ class Interpreter:
                     tool_result = Message(role="tool", message="Tool call failed", summary="")
                 self.conversation.messages.append(tool_result)
                 print(Text(text="Tool: ", color="red"), tool_result.message)
-        # Process assistant message content
         if msg_resp.content:
             assistant_msg = Message(
                 role="assistant",
@@ -133,12 +125,11 @@ class Interpreter:
             self.conversation.messages.append(user_input(""))
 
     async def run(self):
-        # Get initial user input in async context
         initial_text = input(Text(text="Enter a message: ", color="blue"))
         self.conversation.messages.append(
             Message(role="user", message=initial_text, summary="")
         )
-        # Main loop – await asynchronous responses
+        
         while True:
             await self.respond()
 
