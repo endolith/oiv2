@@ -6,7 +6,7 @@ import colorama
 from cli_utils import Text
 from tools.tools import function_tool, ToolRegistry
 from typing import List, Dict, Optional
-from litellm import acompletion, completion
+from litellm import acompletion
 from pydantic import BaseModel
 
 class Message(BaseModel):
