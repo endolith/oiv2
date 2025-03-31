@@ -13,7 +13,7 @@ def shell(command: str) -> Message:
     import subprocess
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
     return Message(
-        role="user", 
+        role="tool", 
         message=result.stdout or result.stderr or "Command executed successfully with no output", 
         summary=f'Assistant executed the shell function with the command `{command}`'
     )

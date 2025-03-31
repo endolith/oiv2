@@ -32,6 +32,8 @@ class Interpreter:
         if msg_resp.tool_calls:
             for tool_call in msg_resp.tool_calls:
                 tool_result = ToolRegistry.dispatch(tool_call)
+                tool_result.tool_call_id = tool_call.id
+                tool_result.name = tool_call.function.name
                 if not isinstance(tool_result, Message):
                     tool_result = Message(role="tool", message="Tool call failed", summary="")
                 self.conversation.messages.append(tool_result)
