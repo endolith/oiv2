@@ -1,9 +1,7 @@
 from tools.tools import function_tool
 from conversation import Message
-from tools.tools import ToolRegistry
 
-
-@ToolRegistry.register
+@function_tool
 def python_runner(code: str) -> Message:
     __doc__ = "Runs python code."
     import subprocess
