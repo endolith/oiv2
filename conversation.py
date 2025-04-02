@@ -1,4 +1,5 @@
 import asyncio
+import locale
 from typing import Dict, List, Optional
 from pydantic import BaseModel
 from litellm import acompletion
@@ -17,7 +18,7 @@ class Message(BaseModel):
             base_url="http://localhost:1234/v1",
             api_key="dummy",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that summarizes messages for an AI. Summary must be a single sentence and not longer than 10 words or the original message. Do not answer questions, only summarize them."},
+                {"role": "system", "content": f"You are a helpful assistant that summarizes messages for an AI. Summary must be a single sentence and not longer than 10 words or the original message. Do not answer questions, only summarize them. The native locale is {locale.getlocale()[0]}"},
                 {"role": self.role, "content": self.message},
             ],
             max_tokens=100,

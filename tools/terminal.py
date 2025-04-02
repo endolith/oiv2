@@ -1,8 +1,5 @@
 import os
-import subprocess
-import platform
 from typing import Optional
-from pydantic import BaseModel
 from cli_utils import Text
 from tools.tools import function_tool
 from conversation import Message

@@ -20,6 +20,7 @@ class ToolRegistry:
 
     @classmethod
     def register(cls, func: Callable) -> Tool:
+        print(func.__name__)
         params = {n: p for n, p in inspect.signature(func).parameters.items() 
                  if n not in ('self', 'cls')}
         hints = get_type_hints(func)
