@@ -5,7 +5,7 @@ from conversation import Message
 def python_runner(code: str) -> Message:
     __doc__ = "Runs python code."
     import subprocess
-    result = subprocess.run(code, capture_output=True, text=True)
+    result = exec(code)
     output = result.stdout or result.stderr or "Command executed successfully with no output"
     return Message(
         role="tool", 
