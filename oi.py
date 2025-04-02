@@ -8,6 +8,7 @@ from litellm import acompletion
 from cli_utils import Text
 from tools.tools import function_tool, ToolRegistry
 from conversation import Message, Conversation
+import tools
 from tools.terminal import user_input
 import locale
 
