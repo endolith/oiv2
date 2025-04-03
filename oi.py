@@ -38,7 +38,7 @@ class Interpreter:
             base_url="http://localhost:1234/v1",
             api_key="dummy",
             messages=self.conversation.get_messages(),
-            max_tokens=1000,
+            max_tokens=3000,
             tools=ToolRegistry.get_all_tools(),
         )
         msg_resp = response.choices[0].message
