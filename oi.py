@@ -51,8 +51,6 @@ class Interpreter:
                 if not isinstance(tool_result, Message):
                     tool_result = Message(role="tool", message="Tool call failed", summary="", tool_call_id=tool_call.id, name=tool_call.function.name)
                 self.conversation.messages.append(tool_result)
-                self.conversation.messages.append(Message(role="system", message="Please provide a summary of the tool call result that relates to the user's request.\n"\
-                                                                                 "Do not execute another tool call unless the output was *wrong*, *incomplete*, or you need to **change** the tool command.", summary=""))
                 print(Text(text="Tool: ", color="red"), tool_result.message)
         if msg_resp.content:
             assistant_msg = Message(
