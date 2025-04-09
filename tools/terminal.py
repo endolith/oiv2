@@ -1,6 +1,7 @@
 import os
 import subprocess
 import platform
+import requests
 from typing import Optional
 from pydantic import BaseModel
 from cli_utils import Text
@@ -24,4 +25,4 @@ def user_input(prompt: Optional[str]) -> Message:
     if prompt:
         print(prompt)
     text = input(Text(text="You: ", color="blue"))
-    return Message(role="user", message=text, summary="") 
+    return Message(role="user", message=text, summary="")

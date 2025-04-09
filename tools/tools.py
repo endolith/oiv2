@@ -46,15 +46,22 @@ class ToolRegistry:
         return tool
 
     @classmethod
-    def get_all_tools(cls) -> list[Dict[str, Any]]: 
-        return [{"type": "function", "function": t.function} for t in cls._tools.values()]
+    def get_all_tools(cls) -> Dict[str, Dict[str, str]]: 
+        return {
+            name: {
+                param: "input"  # Simplified to just show it needs input
+                for param in tool.function['parameters']['properties']
+            }
+            for name, tool in cls._tools.items()
+        }
 
     @classmethod
-    def dispatch(cls, call: Any) -> Any:
+    def dispatch(cls, call: Dict[str, Any]) -> Any:
         try:
-            args = json.loads(call.function.arguments) if isinstance(call.function.arguments, str) else call.function.arguments
-            return cls._tools.get(call.function.name, lambda **_: f"Tool {call.function.name} not found")(**args)
+            tool_name = call["function"]["name"]
+            args = json.loads(call["function"]["arguments"]) if isinstance(call["function"]["arguments"], str) else call["function"]["arguments"]
+            return cls._tools.get(tool_name, lambda **_: f"Tool {tool_name} not found")(**args)
         except Exception as e:
-            return f"Error executing tool {call.function.name}: {str(e)}"
+            return f"Error executing tool {tool_name}: {str(e)}"
 
 function_tool = ToolRegistry.register
