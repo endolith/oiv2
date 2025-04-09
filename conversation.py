@@ -7,8 +7,6 @@ class Message(BaseModel):
     role: str
     message: str
     summary: str = ""
-    tool_call_id: Optional[str] = None
-    name: Optional[str] = None
 
 class Conversation(BaseModel):
     messages: List[Message]
@@ -17,9 +15,7 @@ class Conversation(BaseModel):
     def get_messages(self) -> List[Dict]:
         return [{
             "role": msg.role, 
-            "content": msg.message if i < self.max_recent or msg.role.lower() == "system" else msg.summary,
-            "tool_call_id": msg.tool_call_id if msg.tool_call_id else None,
-            "name": msg.name if msg.name else None,}
+            "message": msg.message if i < self.max_recent or msg.role.lower() == "system" else msg.summary,}
             for i, msg in enumerate(self.messages[::-1])][::-1]
 
     def save(self, filename: str):
