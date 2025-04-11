@@ -6,7 +6,7 @@ from litellm import acompletion
 class Message(BaseModel):
     role: str
     message: str
-    summary: str = ""
+    summary: str | None = None
 
 class Conversation(BaseModel):
     messages: List[Message]
@@ -15,8 +15,8 @@ class Conversation(BaseModel):
     def get_messages(self) -> List[Dict]:
         return [{
             "role": msg.role, 
-            "message": msg.message if i < self.max_recent or msg.role.lower() == "system" else msg.summary,}
-            for i, msg in enumerate(self.messages[::-1])][::-1]
+            "content": msg.message
+        } for i, msg in enumerate(self.messages)]
 
     def save(self, filename: str):
         import json

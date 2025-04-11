@@ -49,7 +49,7 @@ class ToolRegistry:
     def get_all_tools(cls) -> Dict[str, Dict[str, str]]: 
         return {
             name: {
-                param: "input"  # Simplified to just show it needs input
+                param: "your input here"  # Simplified to just show it needs input
                 for param in tool.function['parameters']['properties']
             }
             for name, tool in cls._tools.items()
