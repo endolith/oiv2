@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Literal, Optional, Union, Dict, List
 from conversation import Message
 
-class ToolResponse(BaseModel):
+class ToolCall(BaseModel):
     tool: str = Field(..., description="The tool to use")
     tool_args: dict = Field(..., description="The arguments to pass to the tool")
 
@@ -10,7 +10,7 @@ class ToolResponse(BaseModel):
 
 class ReasonResponse(BaseModel):
     reasoning: str | Dict[str, str] = Field(..., description="Use this to reason about the task. Use step by step reasoning. use markdown for formatting.")
-    tool_response: Optional[ToolResponse] = Field(None, description="Call a tool if you need to. Not running a toll will prompt the user to input.")
+    tool_call: Optional[ToolCall] = Field(None, description="Call a tool if you need to, else return None. Not running a toll will prompt the user to input.")
 
     def to_message(self) -> Message: 
         if isinstance(self.reasoning, dict):

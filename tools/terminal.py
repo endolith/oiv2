@@ -9,7 +9,7 @@ from tools.tools import function_tool, ToolRegistry
 from conversation import Message
 
 @function_tool
-def cmd(command: str) -> Message:
+def shell(command: str) -> Message:
     __doc__ = "Runs shell commands. Make sure you only run commands suitable for the user's native shell environment."
     import subprocess
     try:

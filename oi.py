@@ -10,7 +10,7 @@ from litellm import acompletion
 
 from cli_utils import Text
 from conversation import Conversation, Message
-from structured import ReasonResponse, ToolResponse
+from structured import ReasonResponse, ToolCall
 from tools.tools import ToolRegistry
 from tools.terminal import list_tools
 
@@ -48,11 +48,11 @@ class Interpreter:
             response = await self.respond(ReasonResponse)
             print(Text(text="Assistant: ", color="green"), response.reasoning)
             self.conversation.messages.append(response.to_message())
-            if response.tool_response:
+            if response.tool_call:
                 tool_result = ToolRegistry.dispatch({
                     "function": {
-                        "name": response.tool_response.tool,
-                        "arguments": json.dumps(response.tool_response.tool_args)
+                        "name": response.tool_call.tool,
+                        "arguments": json.dumps(response.tool_call.tool_args)
                     }
                 })
                 print(Text(text="Tool result: ", color="yellow"), tool_result)
