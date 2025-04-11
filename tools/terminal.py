@@ -20,7 +20,7 @@ def cmd(command: str) -> Message:
     finally:
         return Message(
             role="tool", 
-            message=f"{os.getcwd()}: {command}\n{output}"
+            message=f"{command}\n{output}"
         )
     
 @function_tool
