@@ -11,8 +11,8 @@ from litellm import acompletion
 from cli_utils import Text
 from conversation import Conversation, Message
 from structured import ReasonResponse, ToolResponse
-from tools.terminal import user_input
 from tools.tools import ToolRegistry
+from tools.terminal import list_tools
 
 class Interpreter:
     def __init__(self, model: str = "openai/local"):
@@ -20,11 +20,11 @@ class Interpreter:
         self.conversation = Conversation(messages=[Message(role="system",message=(
             f"""You are a helpful tool calling assistant that can run code. 
             Step by step reasoning is required.
-            Always as step 1 gather information.
+            Step 1: Explore the environment and gather information, and then proceed to the next step.
             No placeholders are allowed.
             Users Operating System is: {platform.platform(terse=True)}. 
-            Available tools: {ToolRegistry.get_all_tools()}"""
-            ),summary="",)], max_recent=10)
+            Available tools you can use: {ToolRegistry.get_all_tools()}"""
+            ))], max_recent=10)
 
     async def respond(self, response_format):
         response = await acompletion(

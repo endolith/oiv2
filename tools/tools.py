@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import inspect
 import json
 from typing import get_type_hints
-
+from conversation import Message
 class Tool(BaseModel):
     type: str = "function"
     function: Dict[str, Any]
@@ -60,8 +60,8 @@ class ToolRegistry:
         try:
             tool_name = call["function"]["name"]
             args = json.loads(call["function"]["arguments"]) if isinstance(call["function"]["arguments"], str) else call["function"]["arguments"]
-            return cls._tools.get(tool_name, lambda **_: f"Tool {tool_name} not found")(**args)
+            return cls._tools.get(tool_name, lambda **_: Message(role="tool", message=f"Tool {tool_name} not found"))(**args)
         except Exception as e:
-            return f"Error executing tool {tool_name}: {str(e)}"
+            return Message(role="tool", message=f"Error executing tool {tool_name}: {str(e)}")
 
 function_tool = ToolRegistry.register
