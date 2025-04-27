@@ -20,4 +20,4 @@ class Conversation(BaseModel):
         with open(filename, "w") as f: json.dump([msg.model_dump() for msg in self.messages], f)
 
     def load(self, filename: str):
-        with open(filename, "r") as f: self.messages = [Message(**msg) for msg in json.load(f)] 
+        with open(filename, "r") as f: self.messages = [Message(**msg) for msg in json.load(f)]

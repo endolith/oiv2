@@ -9,7 +9,7 @@ import json
 
 async def main():
     interpreter = Interpreter()
-    print(ToolRegistry.get_all_tools())
+    #print(ToolRegistry.get_all_tools())
     
     while True:
         # Get user input only if last message wasn't a tool call
@@ -39,4 +39,6 @@ async def main():
                 interpreter.conversation.messages.append(tool_result)
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    import colorama
+    colorama.init()
+    asyncio.run(main())
