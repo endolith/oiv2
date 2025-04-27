@@ -1,10 +1,3 @@
-import os
-import subprocess
-import platform
-import requests
-from typing import Optional
-from pydantic import BaseModel
-from cli_utils import Text
 from tools.tools import function_tool, ToolRegistry
 from conversation import Message
 
@@ -22,6 +15,15 @@ def shell(command: str) -> Message:
             role="tool", 
             message=f"{command}\n{output}"
         )
+    
+@function_tool
+def print_tool(message: str) -> Message:
+    __doc__ = "Prints a message to the terminal"
+    print(message)
+    return Message(
+        role="tool",
+        message=f"Printed: {message}"
+    )
     
 @function_tool
 def list_tools() -> Message:

@@ -1,18 +1,10 @@
-import asyncio
 import json
-import os
 import platform
-import subprocess
-from typing import Dict, List, Optional
-
-import colorama
 from litellm import acompletion
 
-from cli_utils import Text
 from conversation import Conversation, Message
-from structured import ReasonResponse, ToolCall
+from structured import ReasonResponse
 from tools.tools import ToolRegistry
-from tools.terminal import list_tools
 
 class Interpreter:
     def __init__(self, model: str = "openai/local"):
@@ -22,7 +14,7 @@ class Interpreter:
             Step by step reasoning is required.
             Step 1: Explore the environment and gather information, and then proceed to the next step.
             No placeholders are allowed.
-            Users Operating System is: {platform.platform(terse=True)}. 
+            User's Operating System is: {platform.platform(terse=True)}. 
             Available tools you can use: {ToolRegistry.get_all_tools()}"""
             ))], max_recent=10)
 
@@ -35,36 +27,10 @@ class Interpreter:
             max_tokens=1000,
             response_format=response_format,
             temperature=0.0,
+            stream=True
         )
-        msg_resp = response.choices[0].message
-        #print(Text(text="Debug - Raw response: ", color="yellow"), msg_resp.content)
-        return response_format(**json.loads(msg_resp.content))
-
-    async def run(self):
-        initial_text = input(Text(text="You: ", color="blue"))
-        self.conversation.messages.append(Message(role="user", message=initial_text))
-
-        while True:            
-            response = await self.respond(ReasonResponse)
-            print(Text(text="Assistant: ", color="green"), response.reasoning)
-            self.conversation.messages.append(response.to_message())
-            if response.tool_call:
-                tool_result = ToolRegistry.dispatch({
-                    "function": {
-                        "name": response.tool_call.tool,
-                        "arguments": json.dumps(response.tool_call.tool_args)
-                    }
-                })
-                print(Text(text="Tool result: ", color="yellow"), tool_result)
-                self.conversation.messages.append(tool_result)
-            else:
-                initial_text = input(Text(text="You: ", color="blue"))
-                self.conversation.messages.append(Message(role="user", message=initial_text))
-
-async def main():
-    colorama.init()
-    interpreter = Interpreter()
-    await interpreter.run()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+        
+        async for chunk in response:
+            if chunk.choices[0].delta.content:
+                content = chunk.choices[0].delta.content
+                yield content

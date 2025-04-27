@@ -10,11 +10,7 @@ class ToolCall(BaseModel):
 
 class ReasonResponse(BaseModel):
     reasoning: str | Dict[str, str] = Field(..., description="Use this to reason about the task. Use step by step reasoning. use markdown for formatting.")
+    message: str = Field(..., description="A message to the user. Use markdown for formatting.")
     tool_call: Optional[ToolCall] = Field(None, description="Call a tool if you need to, else return None. Not running a toll will prompt the user to input.")
 
-    def to_message(self) -> Message: 
-        if isinstance(self.reasoning, dict):
-            message = "\n".join(f"{k}: {v}" for k, v in self.reasoning.items())
-        else:
-            message = str(self.reasoning)
-        return Message(role="assistant", message=message)
+    def to_message(self) -> Message: return Message(role="assistant", message=self.message)
