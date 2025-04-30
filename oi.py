@@ -4,6 +4,7 @@ from litellm import acompletion
 from conversation import Conversation, Message
 from structured import ReasonResponse
 from tools.tools import ToolRegistry
+import locale
 
 class Interpreter:
     def __init__(self, model: str = "openai/local"):
