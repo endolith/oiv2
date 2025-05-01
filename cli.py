@@ -28,7 +28,7 @@ async def main():
         response = ReasonResponse(**json.loads(message))
         if response:
             interpreter.conversation.messages.append(Message(role="assistant", message=message))
-            if response.tool_call:
+            if response.tool_call and response.tool_call.tool.lower() != "none":
                 tool_result = ToolRegistry.dispatch({
                     "function": {
                         "name": response.tool_call.tool,

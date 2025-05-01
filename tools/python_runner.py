@@ -54,10 +54,13 @@ def python_runner(code: str) -> Message:
         err = stderr_capture.getvalue()
         output = out if out else err if err else "Command executed successfully with no output"
     finally:
-        # Cleanup temporary package directory
-        if os.path.exists(temp_lib_dir):
-            sys.path.remove(temp_lib_dir)
-            shutil.rmtree(temp_lib_dir, ignore_errors=True)
+        # Cleanup temporary package directory with error handling
+        if temp_lib_dir and os.path.exists(temp_lib_dir):
+            try:
+                sys.path.remove(temp_lib_dir)
+                shutil.rmtree(temp_lib_dir, ignore_errors=True)
+            except Exception as e:
+                print(f"Error cleaning up temporary directory: {e}")
 
     return Message(
         role="tool",

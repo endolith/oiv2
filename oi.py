@@ -14,6 +14,7 @@ class Interpreter:
             Step by step reasoning is required.
             Step 1: Explore the environment and gather information, and then proceed to the next step.
             No placeholders are allowed.
+            Do not use the print_tool to prompt the user.
             User's Operating System is: {platform.platform(terse=True)}.
             The native locale is: {locale.getlocale()[0]}. 
             Available tools you can use: {ToolRegistry.get_all_tools()}"""
