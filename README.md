@@ -11,22 +11,21 @@ The `oiv2` project is designed to facilitate structured interactions with tools 
 ## Installation
 To set up the project locally, follow these steps:
 1. Clone the repository:
-   ```bash
+```bash
 git clone <repository_url>
 cd oiv2
 ```
 2. Install dependencies using UV:
-   ```bash
-uv install
+```bash
+uv sync
 ```
-3. Activate the virtual environment:
-   ```bash
-uv shell
+3. Run using uv:
+```bash
+uv run cli.py
 ```
 
 ## Usage
-To use the project, you can run the main script `oi.py` which contains the entry point for the application.
 ```bash
-python oi.py
+uv install git+<repository_url>
 ```
 This will execute the main functionality of the project. You can also explore other scripts and modules to understand how tool calls and reasoning responses are managed.
