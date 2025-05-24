@@ -10,7 +10,7 @@ builtin_input = input
 
 def confirm_tool(tool_name, tool_args):
     """Simple y/n confirmation for tool execution."""
-    print(f"Execute {tool_name}? (y/n): ", end="")
+    print(f"Execute {tool_name}({tool_args})? (y/n): ", end="")
     return builtin_input().lower().startswith('y')
 
 def execute_tool_with_confirmation(tool_call, unsafe=False):
@@ -78,11 +78,19 @@ async def async_main(raw_mode=False, unsafe=False):
             # Handle single tool call
             elif response.tool_call and response.tool_call.tool.lower() != "none":
                 tool_result = execute_tool_with_confirmation(response.tool_call, unsafe)
+                tool_result = execute_tool_with_confirmation(tool_call, unsafe)
                 if tool_result:
+                    # Tool was executed
                     tool_output = tool_result.message if hasattr(tool_result, 'message') else str(tool_result)
-                    print(Text(text="🔧 ", color="cyan") + Text(text=f"{response.tool_call.tool}: ", color="cyan") + tool_output)
+                    print(Text(text="🔧 ", color="cyan") + Text(text=f"{tool_call.tool}: ", color="cyan") + tool_output)
                     interpreter.conversation.messages.append(tool_result)
                     tools_executed = True
+                else:
+                    # User declined or tool failed
+                    decline_msg = Message(role="tool", message=f"Tool {tool_call.tool} was not executed")
+                    interpreter.conversation.messages.append(decline_msg)
+                    print(Text(text="❌ ", color="red") + f"Skipped {tool_call.tool}")
+                    tools_executed = True  # Still continue the loop to let AI respond
             
             # Continue loop if tools were executed to let agent see results
             if tools_executed:

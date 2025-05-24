@@ -11,14 +11,18 @@ class Screen:
         self.region = (0, 0, 1920, 1080)
         self.grid = (4, 4)
         
-    def shot(self, path="screenshot.png", region=None):
+    def shot(self, path="./screenshot.png", region=None):
         r = region or self.region
         if self.sys == 'wayland':
             if shutil.which('grim'): subprocess.run(['grim', path] if not region else ['grim', '-g', f'{r[0]},{r[1]} {r[2]}x{r[3]}', path], check=True)
             else: subprocess.run(['gnome-screenshot', '-f', path], check=True)
         elif self.sys == 'x11':
-            if shutil.which('scrot'): subprocess.run(['scrot', path] if not region else ['scrot', '-a', f'{r[0]},{r[1]},{r[2]},{r[3]}', path], check=True)
-            else: subprocess.run(['import', '-window', 'root', path], check=True)
+            if shutil.which('scrot'): 
+                subprocess.run(['scrot', path], check=True)
+            else:
+                import pyautogui
+                screenshot = pyautogui.screenshot()
+                screenshot.save(path)
         elif self.sys == 'windows':
             import pyautogui; pyautogui.screenshot(region=r).save(path)
         
@@ -50,8 +54,8 @@ class Screen:
 screen = Screen()
 
 @function_tool
-def screenshot(save_path: str = "screenshot.png") -> Message:
-    """Takes a screenshot and adds grid overlay with coordinate labels. default_save_path: str = screenshot.png"""
+def screenshot(save_path: str = "./screenshot.png") -> Message:
+    """Takes a screenshot and adds grid overlay with coordinate labels."""
     try:
         screen.shot(save_path)
         screen.grid_overlay(save_path)
