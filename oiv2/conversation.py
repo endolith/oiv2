@@ -8,7 +8,6 @@ class Message(BaseModel):
 
 class Conversation(BaseModel):
     messages: List[Message]
-    max_recent: int
 
     def get_messages(self) -> List[Dict]:
         return [{

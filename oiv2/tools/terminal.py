@@ -1,8 +1,8 @@
 import os
 from typing import Optional
-from cli_utils import Text
-from tools.tools import function_tool
-from conversation import Message
+from ..cli_utils import Text
+from .tools import function_tool
+from ..conversation import Message
 
 @function_tool
 def shell(command: str) -> Message:

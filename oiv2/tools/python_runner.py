@@ -6,8 +6,8 @@ import subprocess
 import contextlib
 import tempfile
 import importlib
-from tools.tools import function_tool
-from conversation import Message
+from .tools import function_tool
+from ..conversation import Message
 
 @function_tool
 def python_runner(code: str) -> Message:

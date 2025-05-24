@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import inspect
 import json
 from typing import get_type_hints
-from conversation import Message
+from ..conversation import Message
 
 class Tool(BaseModel):
     type: str = "function"
