@@ -51,6 +51,7 @@ screen = Screen()
 
 @function_tool
 def screenshot(save_path: str = "screenshot.png") -> Message:
+    """Takes a screenshot and adds grid overlay with coordinate labels. default_save_path: str = screenshot.png"""
     try:
         screen.shot(save_path)
         screen.grid_overlay(save_path)
