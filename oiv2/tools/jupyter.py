@@ -1,6 +1,6 @@
 import io, sys, contextlib, subprocess, importlib.util
-from tools.tools import function_tool
-from conversation import Message
+from .tools import function_tool
+from ..conversation import Message
 
 class Jupyter:
     def __init__(self): self.g, self.l, self.pkgs = {"__name__": "__main__"}, {}, set()

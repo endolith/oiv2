@@ -1,6 +1,6 @@
 import os, subprocess, shutil
-from tools.tools import function_tool
-from conversation import Message
+from .tools import function_tool
+from ..conversation import Message
 
 try: import PIL.Image, PIL.ImageDraw, PIL.ImageFont
 except: PIL = None

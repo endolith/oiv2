@@ -1,6 +1,6 @@
 import subprocess, shutil, time, os
-from tools.tools import function_tool
-from conversation import Message
+from .tools import function_tool
+from ..conversation import Message
 
 try: from .screen import screen
 except: screen = None

@@ -1,7 +1,7 @@
 import os, shutil, subprocess
 from pathlib import Path
-from tools.tools import function_tool
-from conversation import Message
+from .tools import function_tool
+from ..conversation import Message
 
 @function_tool
 def ls(dir: str = ".", pattern: str = "*") -> Message:
