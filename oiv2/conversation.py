@@ -1,9 +1,9 @@
 import json
-from typing import Dict, List
+from typing import Dict, List, Literal
 from pydantic import BaseModel
 
 class Message(BaseModel):
-    role: str
+    role: Literal["system", "user", "assistant", "tool"]
     message: str
 
 class Conversation(BaseModel):

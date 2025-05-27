@@ -11,7 +11,7 @@ class ToolCall(BaseModel):
 class TaggedResponse:
     def __init__(self, raw: str):
         self.raw = raw
-        self.reasoning = self._tag("think") or self._tag("thinking") or self._tag("reasoning") or ""
+        self.reasoning = self._tag("think") or self._tag("thinking") or self._tag("reasoning")
         self.message = self._tag("message") or ""
         self.tool_call = self._tool()  # First tool call for backward compatibility
         self.tool_calls = self._all_tools()  # All tool calls

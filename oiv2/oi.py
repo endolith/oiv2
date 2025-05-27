@@ -25,7 +25,9 @@ You decide what to do based on the situation:
 - User unclear? Ask for clarification
 - Ready to answer? Provide final response
 
-OS: {platform.platform(terse=True)} | Locale: {locale.getlocale()[0]} | Current folder: {os.getcwd()}
+OS: {platform.platform(terse=True)}
+Locale: {locale.getlocale()[0]}
+Current folder: {os.getcwd()}
 Tools: {ToolRegistry.get_all_tools()}"""
 
 class Interpreter:
@@ -33,7 +35,7 @@ class Interpreter:
         self.model = model
         self.conversation = Conversation(messages=[Message(role="system", message=get_system_message())])
 
-    async def respond(self, response_format=None):
+    async def respond(self):
         response = await acompletion(
             model=self.model, 
             base_url="http://localhost:1234/v1", 
