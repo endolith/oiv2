@@ -28,7 +28,7 @@ def execute_tool_with_confirmation(tool_call, unsafe: bool = False):
 
 async def async_main(raw_mode: bool = False, unsafe: bool = False):
     # Import all tools so they register with *ToolRegistry*.
-    from .tools import screen, jupyter, files, input, list_tools, python_runner, terminal
+    # from .tools import screen, jupyter, files, input, list_tools, python_runner, terminal
     
     interpreter = Interpreter()
     parser = StreamTaggedResponse()
@@ -37,17 +37,18 @@ async def async_main(raw_mode: bool = False, unsafe: bool = False):
         while True:
             # Get user input unless the last message came from a tool.
             if interpreter.conversation.messages[-1].role != "tool":
-                user_input = builtin_input(Text(text="You: ", color="blue"))
+                try: user_input = builtin_input(Text(text="You: ", color="blue"))
+                except KeyboardInterrupt: print("\n\nGoodbye!")
                 interpreter.conversation.messages.append(Message(role="user", message=user_input))
 
             # Output from LLM
-            thinker = Spinner(msg="Thinking ", color="green")
-            thinker.start()
+            thinker = Spinner(msg="Thinking ", color="green"); thinker.start()
+            
             async for chunk in interpreter.respond():
                 printable = parser.feed(chunk)
                 if raw_mode or printable:
                     if thinker.running: thinker.stop(); print(Text("Assistant: ", color="green"), end="")
-                    print(printable if printable else chunk, end="")
+                    print(printable if not raw_mode else chunk, end="", flush=True)
 
             print("\n")
             interpreter.conversation.messages.append(Message(role="assistant", message=parser.message))
@@ -56,6 +57,7 @@ async def async_main(raw_mode: bool = False, unsafe: bool = False):
             for name, args in parser.tool_calls:
                 tool_call = ToolCall(tool=name, tool_args=args)
                 tool_result = execute_tool_with_confirmation(tool_call)
+                print(Text("Tool: ", color="yellow"), tool_result)
                 interpreter.conversation.messages.append(tool_result)
 
     except KeyboardInterrupt:

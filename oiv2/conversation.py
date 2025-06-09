@@ -1,10 +1,11 @@
 import json
-from typing import Dict, List, Literal
+from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel
 
 class Message(BaseModel):
     role: Literal["system", "user", "assistant", "tool"]
     message: str
+    image: Optional[str]
 
 class Conversation(BaseModel):
     messages: List[Message]
@@ -12,7 +13,8 @@ class Conversation(BaseModel):
     def get_messages(self) -> List[Dict]:
         return [{
             "role": msg.role, 
-            "content": msg.message
+            "content": msg.message,
+            **({"image_url": msg.image} if msg.image else {})
         } for i, msg in enumerate(self.messages)]
 
     def save(self, filename: str):

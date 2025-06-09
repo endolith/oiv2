@@ -1,87 +1,108 @@
 import re
 from typing import List, Optional
+import json
 
 class StreamTaggedResponse:
-    """Incremental parser for assistant XML‑style tags.
-
-    Args:
-        tool_tag_prefix (str): Base name for tool tags (default "tool").
-    """
-
+    """Incremental parser for assistant XML-style tags with chunk-level routing."""
+    
     REASONING_TAGS = {"think", "thinking", "reasoning"}
+    TOOL_NAME_TAG = "tool_name"
+    TOOL_ARGS_TAG = "tool_args"
+    PRINTABLE_TAGS = {"message"}
 
     def __init__(self):
-        self.state = "outside"
+        self.in_potential_tag = False
+        self.buffer = ""
         self.current_tag: Optional[str] = None
-        self.buffer_tag = ""
-        self.buffer_text = ""
-        self.message_out = ""
-        self.reasoning_out = ""
+        self.message_out: str = ""
+        self.reasoning_out: str = ""
         self.tool_names: List[str] = []
         self.tool_args: List[str] = []
+        self._current_tool_args: str = ""  # Accumulate tool_args text
 
-    # Properties -----------------------------------------------------------
     @property
-    def message(self):
+    def message(self) -> str:
         return self.message_out
 
     @property
-    def reasoning(self):
+    def reasoning(self) -> str:
         return self.reasoning_out
 
     @property
-    def tool_calls(self):
-        return [
-            {"name": n, "args": a}
-            for n, a in zip(self.tool_names, self.tool_args)
-        ]
+    def tool_calls(self) -> List[dict]:
+        return [{"name": name, "args": args} for name, args in zip(self.tool_names, self.tool_args)]
 
-    # Internal helpers -----------------------------------------------------
-    def _flush_buffer_text(self):
-        if self.current_tag is None:
-            # outside any tag → message
-            self.message_out += self.buffer_text
-        elif self.current_tag in self.REASONING_TAGS:
-            self.reasoning_out += self.buffer_text
-        elif self.current_tag == "tool_name":
-            self.tool_names.append(self.buffer_text.strip())
-        elif self.current_tag == "tool_args":
-            self.tool_args.append(self.buffer_text.strip())
-        elif self.current_tag == "message":
-            self.message_out += self.buffer_text
-        # else unknown tag – ignore for now
-        self.buffer_text = ""
+    def _process_tag(self, tag_str: str) -> None:
+        """Toggle context based on full tag string."""
+        #print(f"Processing tag: {tag_str!r}", flush=True)
+        is_close = tag_str.startswith("</")
+        tag_name = re.sub(r"[</> ]", "", tag_str)
+        if is_close and tag_name == self.TOOL_ARGS_TAG and self._current_tool_args:
+            # Finalize tool_args when closing tag is processed
+            self.tool_args.append(self._current_tool_args)
+            self._current_tool_args = ""
+        self.current_tag = None if is_close else tag_name
 
-    # Public feed ----------------------------------------------------------
     def feed(self, chunk: str) -> str:
-        """Feed a token/substring and return *new* printable message text."""
-        printable = ""
-        for ch in chunk:
-            if self.state == "outside":
-                if ch == "<":
-                    self._flush_buffer_text()
-                    self.state = "tag_open"
-                    self.buffer_tag = "<"
-                else:
-                    # accumulate outside text directly to message_out & printable
-                    self.message_out += ch
-                    printable += ch
-            elif self.state == "tag_open":
-                self.buffer_tag += ch
-                if ch == ">":
-                    tag = self.buffer_tag
-                    self.buffer_tag = ""
-                    # Determine if opening or closing
-                    is_close = tag.startswith("</")
-                    tag_name = re.sub(r"[</> ]", "", tag)
-                    if is_close:
-                        self._flush_buffer_text()
-                        self.current_tag = None
-                    else:
-                        # opening tag
-                        self.current_tag = tag_name
-                    self.state = "outside"  # resume scanning text
-            else:
-                # Should not reach here; fallback
-                self.state = "outside"
-        return printable
+        """Feed an atomic chunk and return it immediately if printable."""
+        #print(f"Received chunk: {chunk!r}", flush=True)
+
+        # Append chunk to buffer
+        self.buffer += chunk
+
+        # Process all complete tags in the buffer
+        while True:
+            match = re.search(r"<[^>]+>", self.buffer)
+            if not match:
+                if self.buffer.startswith("<"):
+                    #print(f"Buffering incomplete tag: {self.buffer!r}", flush=True)
+                    self.in_potential_tag = True
+                break
+            tag_str = match.group(0)
+            tag_start, tag_end = match.span()
+            # Extract and route text before the tag
+            text_before = self.buffer[:tag_start]
+            if text_before:
+                printable = self._route_text(text_before)
+                #if printable:
+                    #print(f"Printable text: {printable!r}", flush=True)
+            # Validate tag
+            if not re.match(r"</?[^>]+>", tag_str):
+                #print(f"Invalid tag: {tag_str!r}", flush=True)
+                self.buffer = self.buffer[tag_end:]
+                continue
+            # Process the tag
+            self._process_tag(tag_str)
+            # Remove processed portion from buffer
+            self.buffer = self.buffer[tag_end:]
+
+        # If no tags remain and buffer is not empty, process as text
+        if self.buffer and not self.buffer.startswith("<"):
+            text = self.buffer
+            self.buffer = ""
+            self.in_potential_tag = False
+            if text:
+                printable = self._route_text(text)
+                #if printable:
+                    #print(f"Printable text: {printable!r}", flush=True)
+                return printable
+        
+        self.in_potential_tag = self.buffer.startswith("<")
+        return ""
+
+    def _route_text(self, text: str) -> str:
+        """Route text based on current_tag and return printable text."""
+        #print(f"Routing text: {text!r}, current_tag: {self.current_tag!r}", flush=True)
+        if self.current_tag in self.REASONING_TAGS:
+            self.reasoning_out += text
+            return ""
+        if self.current_tag == self.TOOL_NAME_TAG:
+            self.tool_names.append(text.strip())
+            return ""
+        if self.current_tag == self.TOOL_ARGS_TAG:
+            self._current_tool_args += text
+            return ""
+        if self.current_tag is None or self.current_tag in self.PRINTABLE_TAGS:
+            self.message_out += text
+            return text
+        return ""
