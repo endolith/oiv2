@@ -12,7 +12,7 @@ AI assistant with computer automation tools designed for small local LLMs. Grid-
 ## Installation
 ```bash
 # Install globally with uv
-uv tool install git+https://github.com/yourusername/oiv2.git
+uv tool install git+https://github.com/Notnaton/oiv2.git
 
 # Or install locally for development
 git clone <repo> && cd oiv2 && uv sync
