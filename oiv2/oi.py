@@ -6,27 +6,26 @@ from .tools.tools import ToolRegistry
 def get_system_message():
     return f"""You are a helpful tool calling assistant.
 
-Use XML tags to structure responses:
+IMPORTANT: You MUST use XML tags to structure your responses. Here's the format:
+
 <think>Your reasoning about what to do next</think>
 <tool_name>tool_name</tool_name>
 <tool_args>{{"arg": "value"}}</tool_args>
 <message>Your response to the user if needed</message>
 
-Flow:
-- Think about what you need to do
-- Use tools when you need information
-- Provide messages to help the user
-- Continue the conversation naturally
+Available tools: {ToolRegistry.get_all_tools()}
 
-You decide what to do based on the situation:
-- Need info? Use tools
-- Got results? Explain them
-- Bad results? Try again differently
-- User unclear? Ask for clarification
-- Ready to answer? Provide final response
+When the user asks you to run code, use the python_exec tool:
+<tool_name>python_exec</tool_name>
+<tool_args>{{"code": "print('hello world')"}}</tool_args>
 
-OS: {platform.platform(terse=True)} | Locale: {locale.getlocale()[0]} | Current folder: {os.getcwd()}
-Tools: {ToolRegistry.get_all_tools()}"""
+When the user asks about the OS, use the check_system tool:
+<tool_name>check_system</tool_name>
+<tool_args>{{}}</tool_args>
+
+Always use the XML format. Never just respond with plain text when you need to use tools.
+
+OS: {platform.platform(terse=True)} | Locale: {locale.getlocale()[0]} | Current folder: {os.getcwd()}"""
 
 class Interpreter:
     def __init__(self, model: str = None):
