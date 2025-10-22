@@ -19,6 +19,11 @@ When the user asks you to run code, use the python_exec tool:
 <tool_name>python_exec</tool_name>
 <tool_args>{{"code": "print('hello world')"}}</tool_args>
 
+IMPORTANT: Always use print() to show output. For example:
+- To show OS info: print(platform.system())
+- To show calculations: print(2 + 2)
+- To show variables: print(my_variable)
+
 When the user asks about the OS, use the check_system tool:
 <tool_name>check_system</tool_name>
 <tool_args>{{}}</tool_args>
