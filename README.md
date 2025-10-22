@@ -4,7 +4,7 @@ AI assistant with computer automation tools designed for small local LLMs. Grid-
 
 ## Features
 - **Grid Screenshots**: A1, B2, C3 grid overlays for precise clicking
-- **Persistent Python**: Jupyter-like environment with auto-package install  
+- **Persistent Python**: Jupyter-like environment with auto-package install
 - **Cross-Platform**: Wayland, X11, Windows, macOS support
 - **XML Tags**: Simple response format for small LLMs
 - **Compact Code**: Clean, minimal codebase
@@ -52,17 +52,28 @@ uv pip install -e .
 
 ### Environment Variables
 For API keys or other env vars, create a `.env` file in the project root:
+
+**OpenAI API (recommended for best results):**
 ```
-OPENAI_API_KEY=sk-xxxx
+OPENAI_API_KEY=sk-your-openai-api-key-here
+OIV2_MODEL=gpt-3.5-turbo
 ```
-`python-dotenv` will automatically load it.
+
+**Local Model (no API key needed):**
+```
+# Leave OPENAI_API_KEY empty or unset
+OIV2_MODEL=openai/local
+OIV2_BASE_URL=http://localhost:1234/v1
+```
+
+Copy `env.example` to `.env` and customize as needed. `python-dotenv` will automatically load it.
 
 ## Quick Start
 ```bash
 # Check system and get setup commands if needed
 oiv2-setup
 
-# Test installation  
+# Test installation
 oiv2-test
 
 # Launch the assistant
@@ -70,8 +81,8 @@ interpreter
 ```
 
 ## System Tools (Linux only)
-**Wayland**: `sudo apt install grim dotool`  
-**X11**: `sudo apt install scrot xdotool`  
+**Wayland**: `sudo apt install grim dotool`
+**X11**: `sudo apt install scrot xdotool`
 **Windows/macOS**: No additional setup needed
 
 ## Tools
@@ -90,7 +101,7 @@ AI: <thinking>Need to see screen first, then locate browser</thinking>
     <message>I'll take a screenshot to see what's available</message>
     <tool_name>screenshot</tool_name>
     <tool_args>{}</tool_args>
-    
+
     # After seeing grid: Browser appears to be at B2
     <tool_name>click_grid</tool_name>
     <tool_args>{"label": "B2"}</tool_args>
@@ -102,18 +113,27 @@ AI: <thinking>Need to see screen first, then locate browser</thinking>
 - Perfect for small LLMs that can't do complex visual reasoning
 - Zoom into grid cells for detailed interaction
 
-## Local LLM Setup
+## AI Model Setup
+
+### OpenAI API (Recommended)
+Best performance and reliability. Set your API key in `.env`:
+```
+OPENAI_API_KEY=sk-your-key-here
+OIV2_MODEL=gpt-3.5-turbo  # or gpt-4
+```
+
+### Local Models
 Works with any OpenAI-compatible server:
-- **Ollama**: `ollama serve` (update base_url to localhost:11434)
+- **Ollama**: `ollama serve` (set `OIV2_BASE_URL=http://localhost:11434/v1`)
 - **LM Studio**: Usually localhost:1234 (default)
 - **Text Generation WebUI**: With OpenAI extension
 
-Best models: Code Llama 7B+, Mistral 7B+, Qwen2.5 7B+
+Best local models: Code Llama 7B+, Mistral 7B+, Qwen2.5 7B+
 
 ## Commands
 After installation, these commands are available globally:
 - `interpreter` - Main assistant interface
-- `oiv2-setup` - Check system requirements  
+- `oiv2-setup` - Check system requirements
 - `oiv2-test` - Verify installation
 - `oiv2` - Alternative name for main interface
 
