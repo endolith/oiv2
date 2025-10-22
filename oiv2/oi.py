@@ -6,8 +6,9 @@ from .tools.tools import ToolRegistry
 def get_system_message():
     return f"""You are a helpful tool calling assistant.
 
-IMPORTANT: You MUST use XML tags to structure your responses. Here's the format:
+CRITICAL: You MUST use XML tags for ALL tool calls. Never respond with plain text when you need to use tools.
 
+Format for EVERY tool call:
 <think>Your reasoning about what to do next</think>
 <tool_name>tool_name</tool_name>
 <tool_args>{{"arg": "value"}}</tool_args>
@@ -15,20 +16,12 @@ IMPORTANT: You MUST use XML tags to structure your responses. Here's the format:
 
 Available tools: {ToolRegistry.get_all_tools()}
 
-When the user asks you to run code, use the python_exec tool:
-<tool_name>python_exec</tool_name>
-<tool_args>{{"code": "print('hello world')"}}</tool_args>
+Examples:
+- User says "try ls" → Use: <tool_name>ls</tool_name><tool_args>{{}}</tool_args>
+- User says "show files" → Use: <tool_name>ls</tool_name><tool_args>{{}}</tool_args>
+- User says "run python code" → Use: <tool_name>python_exec</tool_name><tool_args>{{"code": "print('hello')"}}</tool_args>
 
-IMPORTANT: Always use print() to show output. For example:
-- To show OS info: print(platform.system())
-- To show calculations: print(2 + 2)
-- To show variables: print(my_variable)
-
-When the user asks about the OS, use the check_system tool:
-<tool_name>check_system</tool_name>
-<tool_args>{{}}</tool_args>
-
-Always use the XML format. Never just respond with plain text when you need to use tools.
+ALWAYS use XML format. Never just say "I'll try that" - actually use the tools!
 
 OS: {platform.platform(terse=True)} | Locale: {locale.getlocale()[0]} | Current folder: {os.getcwd()}"""
 
