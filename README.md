@@ -10,13 +10,52 @@ AI assistant with computer automation tools designed for small local LLMs. Grid-
 - **Compact Code**: Clean, minimal codebase
 
 ## Installation
-```bash
-# Install globally with uv
-uv tool install git+https://github.com/Notnaton/oiv2.git
 
-# Or install locally for development
-git clone <repo> && cd oiv2 && uv sync
+You can install either **globally** (for quick use) or **locally** (for development).
+
+### Global Install
+```bash
+uv tool install git+https://github.com/Notnaton/oiv2.git
 ```
+This makes commands (`interpreter`, `oiv2-setup`, `oiv2-test`) available globally in `~/.local/bin`.
+
+### Local Development Install
+```bash
+git clone <repo> && cd oiv2
+uv sync
+```
+This creates a `.venv` folder inside the project.
+
+Activate it before running commands:
+
+**macOS/Linux**
+```bash
+source .venv/bin/activate
+```
+
+**Windows (PowerShell)**
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Then you can run:
+```bash
+oiv2-setup
+oiv2-test
+interpreter
+```
+
+To reinstall after making code changes:
+```bash
+uv pip install -e .
+```
+
+### Environment Variables
+For API keys or other env vars, create a `.env` file in the project root:
+```
+OPENAI_API_KEY=sk-xxxx
+```
+`python-dotenv` will automatically load it.
 
 ## Quick Start
 ```bash
